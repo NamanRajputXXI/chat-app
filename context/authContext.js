@@ -14,7 +14,7 @@ export const UserProvider = ({ children }) => {
   const authStateChanged = (user) => {
     setIsLoading(true);
     if (!user) {
-      clearImmediate();
+      clear();
       return;
     }
     setCurrentUser(user);
