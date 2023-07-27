@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React, { useEffect } from "react";
 import { IoLogoGoogle, IoLogoFacebook } from "react-icons/io";
-import { auth } from "@/firebase/firebase";
+import { auth, db } from "@/firebase/firebase";
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/router";
 import {
@@ -11,6 +11,8 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { profileColors } from "@/utils/constants";
 
 const gProvider = new GoogleAuthProvider();
 const fProvider = new FacebookAuthProvider();
@@ -42,16 +44,26 @@ const register = () => {
     const displayName = e.target[0].value;
     const email = e.target[1].value;
     const password = e.target[2].value;
+    const colorIndex = Math.floor(Math.random() * profileColors.length);
     try {
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        displayName,
+        email,
+        color: profileColors[colorIndex],
+      });
+      await setDoc(doc(db, "userChats", user.uid), {});
       await updateProfile(user, {
         displayName,
       });
+
       console.log(user);
+      router.push("/");
     } catch (error) {
       console.log(error);
     }
