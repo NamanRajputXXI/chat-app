@@ -1,12 +1,23 @@
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { IoLogoGoogle, IoLogoFacebook } from "react-icons/io";
 import { auth } from "@/firebase/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/router";
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  signInWithPopup,
+  sendPasswordResetEmail,
+} from "firebase/auth";
+import { toast } from "react-toastify";
+import ToastMessage from "@/components/ToastMessage";
+const gProvider = new GoogleAuthProvider();
+const fProvider = new FacebookAuthProvider();
 const login = () => {
   const { currentUser, isLoading } = useAuth();
+  const [email, setEmail] = useState("");
   const router = useRouter();
   useEffect(() => {
     if (!isLoading && currentUser) {
@@ -24,11 +35,45 @@ const login = () => {
       console.log(error);
     }
   };
+  const signInWithGoogle = async () => {
+    try {
+      await signInWithPopup(auth, gProvider);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const signInWithFacebook = async () => {
+    try {
+      await signInWithPopup(auth, fProviderProvider);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const resetPassword = async () => {
+    try {
+      toast.promise(
+        async () => {
+          await sendPasswordResetEmail(auth, email);
+        },
+        {
+          pending: "Generating reset link",
+          success: "Reset email send to your registered email",
+          error: "You have entered wrong email id!",
+        },
+        {
+          autoClose: 5000,
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return isLoading || (!isLoading && currentUser) ? (
     "Loader..."
   ) : (
     <div className="flex items-center justify-center h-screen bg-c1">
+      <ToastMessage />
       <div className="flex flex-col items-center ">
         <div className="text-center">
           <div className="text-4xl font-bold">Login to Your Account</div>
@@ -37,13 +82,19 @@ const login = () => {
           </div>
         </div>
         <div className="flex items-center w-full gap-2 mt-10 mb-5">
-          <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 w-1/2 h-14 rounded-md cursor-pointer p-[1px]">
+          <div
+            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 w-1/2 h-14 rounded-md cursor-pointer p-[1px]"
+            onClick={signInWithGoogle}
+          >
             <div className="flex items-center justify-center w-full h-full gap-3 font-semibold text-white rounded-md bg-c1">
               <IoLogoGoogle size={24} />
               <span>Login with Google</span>
             </div>
           </div>
-          <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 w-1/2 h-14 rounded-md cursor-pointer p-[1px]">
+          <div
+            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 w-1/2 h-14 rounded-md cursor-pointer p-[1px]"
+            onClick={signInWithFacebook}
+          >
             <div className="flex items-center justify-center w-full h-full gap-3 font-semibold text-white rounded-md bg-c1">
               <IoLogoFacebook size={24} />
               <span>Login with Facebook</span>
@@ -64,6 +115,7 @@ const login = () => {
             placeholder="Email"
             className="w-full px-5 border-none outline-none h-14 bg-c5 rounded-xl text-c3"
             autoComplete="off"
+            onChange={(e) => setEmail(e.target.value)}
           />
           <input
             type="password"
@@ -72,7 +124,9 @@ const login = () => {
             autoComplete="off"
           />
           <div className="w-full text-right text-c3">
-            <span className="cursor-pointer">Forget Password ?</span>
+            <span className="cursor-pointer " onClick={resetPassword}>
+              Forget Password ?
+            </span>
           </div>
           <button className="w-full mt-4 text-base font-semibold outline-none h-14 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
             Login to Your Account
