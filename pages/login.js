@@ -1,6 +1,8 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { IoLogoGoogle, IoLogoFacebook } from "react-icons/io";
+import { toast } from "react-toastify";
+import ToastMessage from "@/components/ToastMessage";
 import { auth } from "@/firebase/firebase";
 import { useAuth } from "@/context/authContext";
 import { useRouter } from "next/router";
@@ -11,8 +13,7 @@ import {
   signInWithPopup,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { toast } from "react-toastify";
-import ToastMessage from "@/components/ToastMessage";
+
 const gProvider = new GoogleAuthProvider();
 const fProvider = new FacebookAuthProvider();
 const login = () => {
