@@ -13,6 +13,7 @@ import {
   signInWithPopup,
   sendPasswordResetEmail,
 } from "firebase/auth";
+import Loader from "@/components/Loader";
 
 const gProvider = new GoogleAuthProvider();
 const fProvider = new FacebookAuthProvider();
@@ -71,7 +72,7 @@ const login = () => {
   };
 
   return isLoading || (!isLoading && currentUser) ? (
-    "Loader..."
+    <Loader />
   ) : (
     <div className="flex items-center justify-center h-screen bg-c1">
       <ToastMessage />

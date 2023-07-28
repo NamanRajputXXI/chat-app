@@ -13,6 +13,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { profileColors } from "@/utils/constants";
+import Loader from "@/components/Loader";
 
 const gProvider = new GoogleAuthProvider();
 const fProvider = new FacebookAuthProvider();
@@ -69,7 +70,7 @@ const register = () => {
     }
   };
   return isLoading || (!isLoading && currentUser) ? (
-    "Loader..."
+    <Loader />
   ) : (
     <div className="flex items-center justify-center h-screen bg-c1">
       <div className="flex flex-col items-center ">
