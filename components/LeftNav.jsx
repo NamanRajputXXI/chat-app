@@ -8,12 +8,65 @@ import { IoClose, IoLogOutOutline } from "react-icons/io5";
 import { MdPhotoCamera, MdAddAPhoto, MdDeleteForever } from "react-icons/md";
 import { BsFillCheckCircleFill } from "react-icons/bs";
 import { profileColors } from "@/utils/constants";
+import { toast } from "react-toastify";
+import ToastMessage from "./ToastMessage";
+import { doc, updateDoc } from "firebase/firestore";
+import { auth, db } from "@/firebase/firebase";
+import { updateProfile } from "firebase/auth";
 const LeftNav = () => {
-  const { currentUser, signOut } = useAuth();
+  const { currentUser, signOut, setCurrentUser } = useAuth();
   const [editProfile, setEditProfile] = useState(true);
   const [nameEdited, setNameEdited] = useState(false);
+  const authUser = auth.currentUser;
   const handleUpdateProfile = (type, value) => {
     // color, name, photo, photo-remove
+    let obj = { ...currentUser };
+    switch (type) {
+      case "color":
+        obj.color = value;
+        break;
+      case "name":
+        obj.displayName = value;
+        break;
+      case "photo":
+        obj.photoURL = value;
+        break;
+      case "photo-remove":
+        obj.photoURL = null;
+        break;
+      default:
+        break;
+    }
+    try {
+      toast.promise(
+        async () => {
+          const userDocRef = doc(db, "users", currentUser.uid);
+          await updateDoc(userDocRef, obj);
+          setCurrentUser(obj);
+          if (type === "photo-remove") {
+            await updateProfile(authUser, {
+              photoURL: null,
+            });
+          }
+          if (type === "name") {
+            await updateProfile(authUser, {
+              displayName: value,
+            });
+            setNameEdited(false);
+          }
+        },
+        {
+          pending: "Updating Profile",
+          success: "Profile updated succesfully",
+          error: "Profile Update Failed",
+        },
+        {
+          autoClose: 3000,
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    }
   };
   const onKeyDown = (e) => {
     if (e.key === "Enter" && e.keyCode === 13) {
@@ -32,6 +85,7 @@ const LeftNav = () => {
   const editProfileContainer = () => {
     return (
       <div className="relative flex flex-col items-center ">
+        <ToastMessage />
         <Icon
           size="small"
           className="absolute top-0 right-5 hover:bg-c2"
@@ -69,6 +123,10 @@ const LeftNav = () => {
                 className="cursor-pointer text-c4"
                 onClick={() => {
                   //name edit logic
+                  handleUpdateProfile(
+                    "name",
+                    document.getElementById("displayNameEdit").innerText
+                  );
                 }}
               />
             )}
@@ -87,6 +145,9 @@ const LeftNav = () => {
         <div className="grid grid-cols-5 gap-4 mt-5">
           {profileColors.map((color, index) => (
             <span
+              onClick={() => {
+                handleUpdateProfile("color", color);
+              }}
               key={index}
               className="flex items-center justify-center w-10 h-10 transition-transform rounded-full cursor-pointer hover:scale-125"
               style={{ backgroundColor: color }}
