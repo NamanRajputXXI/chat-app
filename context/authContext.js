@@ -3,12 +3,19 @@ import { createContext, useContext, useEffect, useState } from "react";
 const UserContext = createContext();
 import { onAuthStateChanged, signOut as authSignOut } from "firebase/auth";
 import { auth, db } from "@/firebase/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 export const UserProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const clear = () => {
+  const clear = async () => {
+    try {
+      if (currentUser) {
+        await updateDoc(doc(db, "users", currentUser.uid), {
+          isOnline: true,
+        });
+      }
+    } catch (error) {}
     setCurrentUser(null);
     setIsLoading(false);
   };
@@ -17,6 +24,12 @@ export const UserProvider = ({ children }) => {
     if (!user) {
       clear();
       return;
+    }
+    const userDocExist = await getDoc(doc(db, "users", user.uid));
+    if (userDocExist.exists()) {
+      await updateDoc(doc(db, "users", user.uid), {
+        isOnline: true,
+      });
     }
     const userDoc = await getDoc(doc(db, "users", user.uid));
 
