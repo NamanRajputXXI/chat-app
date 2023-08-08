@@ -3,16 +3,69 @@ import PopupWrapper from "./PopupWrapper";
 import { useAuth } from "@/context/authContext";
 import { useChatContext } from "@/context/chatContext";
 import Avtar from "../Avtar";
+import Search from "../Search";
+import {
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { db } from "@/firebase/firebase";
 const UsersPopup = (props) => {
   const { currentUser } = useAuth();
-  const { users } = useChatContext();
+  const { users, dispatch } = useChatContext();
+  const handleSelect = async (user) => {
+    try {
+      const combinedId =
+        currentUser.uid > user.uid
+          ? currentUser.uid + user.uid
+          : user.uid + currentUser.uid;
+      const res = await getDoc(doc(db, "chats", combinedId));
+      if (!res.exists()) {
+        //chat document doesn't exists
+        await setDoc(doc(db, "chats", combinedId), {
+          messages: [],
+        });
+        const currentUserChatRef = await getDoc(
+          doc(db, "userChats", currentUser.uid)
+        );
+        const userChatRef = await getDoc(doc(db, "userChats", user.uid));
+        if (!currentUserChatRef.exists()) {
+          await getDoc(doc(db, "userChats", currentUser.uid), {});
+        }
+        if (!userChatRef.exists()) {
+          await getDoc(doc(db, "userChats", user.uid), {});
+        }
+        await updateDoc(doc(db, "userChats", user.uid), {
+          [combinedId + ".userInfo"]: {
+            uid: currentUser.uid,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL || null,
+            color: currentUser.color,
+          },
+          [combinedId + ".date"]: serverTimestamp(),
+        });
+      } else {
+        // chat document existes
+      }
+      dispatch({ type: "CHANGE_USER", payload: user });
+      props.onHide();
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <PopupWrapper {...props}>
+      <Search />
       <div className="relative flex flex-col gap-2 mt-5 overflow-auto grow scrollbar">
         <div className="absolute w-full">
           {users &&
             Object.values(users).map((user) => (
-              <div className="flex items-center gap-4 px-4 py-2 cursor-pointer rounded-xl hover:bg-c5">
+              <div
+                className="flex items-center gap-4 px-4 py-2 cursor-pointer rounded-xl hover:bg-c5"
+                onClick={() => handleSelect(user)}
+              >
                 <Avtar size="large" user={user} />
                 <div className="flex flex-col gap-1 grow">
                   <span className="flex items-center justify-between text-base text-white">
