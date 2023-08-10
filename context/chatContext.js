@@ -4,6 +4,8 @@ const chatContext = createContext();
 
 export const ChatContextProvider = ({ children }) => {
   const [users, setUsers] = useState(false);
+  const [chats, setChats] = useState([]);
+  const [selectedChats, setSelectedChats] = useState(null);
   const { currentUser } = useAuth();
   const INITIAL_STATE = {
     chatId: "",
@@ -25,7 +27,18 @@ export const ChatContextProvider = ({ children }) => {
   };
   const [state, dispatch] = useReducer(chatReducer, INITIAL_STATE);
   return (
-    <chatContext.Provider value={{ users, setUsers, data: state, dispatch }}>
+    <chatContext.Provider
+      value={{
+        users,
+        setUsers,
+        data: state,
+        dispatch,
+        chats,
+        setChats,
+        selectedChats,
+        setSelectedChats,
+      }}
+    >
       {children}
     </chatContext.Provider>
   );
